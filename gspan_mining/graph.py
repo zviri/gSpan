@@ -107,24 +107,24 @@ class Graph(object):
             self.set_of_elb[elb].add((to, frm))
         return self
 
-    def display(self):
+    def display(self, support=""):
         """Display the graph as text."""
-        display_str = ''
+        display_str = 't # {} {}\n'.format(self.gid, support)
         print('t # {}'.format(self.gid))
         for vid in self.vertices:
             print('v {} {}'.format(vid, self.vertices[vid].vlb))
-            display_str += 'v {} {} '.format(vid, self.vertices[vid].vlb)
+            display_str += 'v {} {}\n'.format(vid, self.vertices[vid].vlb)
         for frm in self.vertices:
             edges = self.vertices[frm].edges
             for to in edges:
                 if self.is_undirected:
                     if frm < to:
                         print('e {} {} {}'.format(frm, to, edges[to].elb))
-                        display_str += 'e {} {} {} '.format(
+                        display_str += 'e {} {} {}\n'.format(
                             frm, to, edges[to].elb)
                 else:
                     print('e {} {} {}'.format(frm, to, edges[to].elb))
-                    display_str += 'e {} {} {}'.format(frm, to, edges[to].elb)
+                    display_str += 'e {} {} {}\n'.format(frm, to, edges[to].elb)
         return display_str
 
     def plot(self):

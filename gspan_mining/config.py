@@ -39,6 +39,13 @@ parser.add_argument(
          'default inf'
 )
 parser.add_argument(
+    '-e', '--upper_bound_of_num_edges',
+    type=int,
+    default=float('inf'),
+    help='int, upper bound of number of edges of output subgraph, '
+         'default inf'
+)
+parser.add_argument(
     '-d', '--directed',
     type=str2bool,
     default=False,
@@ -54,6 +61,11 @@ parser.add_argument(
     'database_file_name',
     type=str,
     help='str, database file name'
+)
+parser.add_argument(
+    'output_path',
+    type=str,
+    help='Output path'
 )
 parser.add_argument(
     '-p', '--plot',

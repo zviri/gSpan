@@ -26,11 +26,13 @@ def main(FLAGS=None):
         min_support=FLAGS.min_support,
         min_num_vertices=FLAGS.lower_bound_of_num_vertices,
         max_num_vertices=FLAGS.upper_bound_of_num_vertices,
+        max_num_edges=FLAGS.upper_bound_of_num_edges,
         max_ngraphs=FLAGS.num_graphs,
         is_undirected=(not FLAGS.directed),
         verbose=FLAGS.verbose,
         visualize=FLAGS.plot,
-        where=FLAGS.where
+        where=FLAGS.where,
+        output_path=FLAGS.output_path
     )
 
     gs.run()

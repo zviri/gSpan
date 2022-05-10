@@ -13,7 +13,7 @@ from .graph import AUTO_EDGE_ID
 from .graph import Graph
 from .graph import VACANT_GRAPH_ID
 from .graph import VACANT_VERTEX_LABEL
-
+from pathlib import Path
 import pandas as pd
 
 
@@ -125,11 +125,12 @@ class DFScode(list):
 class PDFS(object):
     """PDFS class."""
 
-    def __init__(self, gid=VACANT_GRAPH_ID, edge=None, prev=None):
+    def __init__(self, gid=VACANT_GRAPH_ID, edge=None, prev=None, delta=None):
         """Initialize PDFS instance."""
         self.gid = gid
         self.edge = edge
         self.prev = prev
+        self.delta = delta
 
 
 class Projected(list):
@@ -187,11 +188,13 @@ class gSpan(object):
                  min_support=10,
                  min_num_vertices=1,
                  max_num_vertices=float('inf'),
+                 max_num_edges=float('inf'),
                  max_ngraphs=float('inf'),
                  is_undirected=True,
                  verbose=False,
                  visualize=False,
-                 where=False):
+                 where=False,
+                 output_path=""):
         """Initialize gSpan instance."""
         self._database_file_name = database_file_name
         self.graphs = dict()
@@ -200,6 +203,7 @@ class gSpan(object):
         self._min_support = min_support
         self._min_num_vertices = min_num_vertices
         self._max_num_vertices = max_num_vertices
+        self._max_num_edges = max_num_edges
         self._DFScode = DFScode()
         self._support = 0
         self._frequent_size1_subgraphs = list()
@@ -211,6 +215,8 @@ class gSpan(object):
         self._visualize = visualize
         self._where = where
         self.timestamps = dict()
+        self.output_path = Path(output_path)
+        self.output_path.write_text("")
         if self._max_num_vertices < self._min_num_vertices:
             print('Max number of vertices can not be smaller than '
                   'min number of that.\n'
@@ -256,7 +262,7 @@ class gSpan(object):
                 elif cols[0] == 'v':
                     tgraph.add_vertex(cols[1], cols[2])
                 elif cols[0] == 'e':
-                    tgraph.add_edge(AUTO_EDGE_ID, cols[1], cols[2], cols[3])
+                    tgraph.add_edge(AUTO_EDGE_ID, cols[1], cols[2], int(cols[3]))
             # adapt to input files that do not end with 't # -1'
             if tgraph is not None:
                 self.graphs[graph_cnt] = tgraph
@@ -306,8 +312,8 @@ class gSpan(object):
             for vid, v in g.vertices.items():
                 edges = self._get_forward_root_edges(g, vid)
                 for e in edges:
-                    root[(v.vlb, e.elb, g.vertices[e.to].vlb)].append(
-                        PDFS(gid, e, None)
+                    root[(v.vlb, 0, g.vertices[e.to].vlb)].append(
+                        PDFS(gid, e, None, e.elb)
                     )
 
         for vevlb, projected in root.items():
@@ -316,7 +322,23 @@ class gSpan(object):
             self._DFScode.pop()
 
     def _get_support(self, projected):
-        return len(set([pdfs.gid for pdfs in projected]))
+        unique_node_mappings = [set() for i in range(len(self._get_edges_from_projection(projected[0])) + 1)]
+        for pdfs in projected:
+            edges = self._get_edges_from_projection(pdfs)
+            for i, edge in enumerate(edges):
+                unique_node_mappings[i].add(edge.frm)
+                if i == len(edges) - 1:
+                    unique_node_mappings[i + 1].add(edge.to)
+            
+        return min(map(len, unique_node_mappings))
+
+    def _get_edges_from_projection(self, pdfs: PDFS):
+        edges = [pdfs.edge]
+        while pdfs.prev is not None:
+            pdfs = pdfs.prev
+            edges.append(pdfs.edge)
+        return list(reversed(edges))
+
 
     def _report_size1(self, g, support):
         g.display()
@@ -329,7 +351,9 @@ class gSpan(object):
             return
         g = self._DFScode.to_graph(gid=next(self._counter),
                                    is_undirected=self._is_undirected)
-        display_str = g.display()
+        display_str = g.display(self._support)
+        with open(self.output_path, "a") as ofile:
+            ofile.write(display_str)
         print('\nSupport: {}'.format(self._support))
 
         # Add some report info to pandas dataframe "self._report_df".
@@ -506,7 +530,9 @@ class gSpan(object):
 
     def _subgraph_mining(self, projected):
         self._support = self._get_support(projected)
-        if self._support < self._min_support:
+        if self._support < self._min_support or len(
+            self._get_edges_from_projection(projected[0])
+        ) > self._max_num_edges:
             return
         if not self._is_min():
             return
@@ -521,6 +547,7 @@ class gSpan(object):
         forward_root = collections.defaultdict(Projected)
         backward_root = collections.defaultdict(Projected)
         for p in projected:
+            delta = p.delta
             g = self.graphs[p.gid]
             history = History(g, p)
             # backward
@@ -531,8 +558,8 @@ class gSpan(object):
                                             history)
                 if e is not None:
                     backward_root[
-                        (self._DFScode[rmpath_i].frm, e.elb)
-                    ].append(PDFS(g.gid, e, p))
+                        (self._DFScode[rmpath_i].frm, e.elb - delta)
+                    ].append(PDFS(g.gid, e, p, delta))
             # pure forward
             if num_vertices >= self._max_num_vertices:
                 continue
@@ -542,8 +569,8 @@ class gSpan(object):
                                                  history)
             for e in edges:
                 forward_root[
-                    (maxtoc, e.elb, g.vertices[e.to].vlb)
-                ].append(PDFS(g.gid, e, p))
+                    (maxtoc, e.elb - delta, g.vertices[e.to].vlb)
+                ].append(PDFS(g.gid, e, p, delta))
             # rmpath forward
             for rmpath_i in rmpath:
                 edges = self._get_forward_rmpath_edges(g,
@@ -553,8 +580,8 @@ class gSpan(object):
                 for e in edges:
                     forward_root[
                         (self._DFScode[rmpath_i].frm,
-                         e.elb, g.vertices[e.to].vlb)
-                    ].append(PDFS(g.gid, e, p))
+                         e.elb - delta, g.vertices[e.to].vlb)
+                    ].append(PDFS(g.gid, e, p, delta))
 
         # backward
         for to, elb in backward_root:
