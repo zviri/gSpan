@@ -9,13 +9,13 @@ import copy
 import itertools
 import time
 
-from .graph import AUTO_EDGE_ID
+from .graph import AUTO_EDGE_ID, Edge
 from .graph import Graph
 from .graph import VACANT_GRAPH_ID
 from .graph import VACANT_VERTEX_LABEL
 from pathlib import Path
 import pandas as pd
-
+import networkx as nx
 
 def record_timestamp(func):
     """Record timestamp before and after call of `func`."""
@@ -217,6 +217,7 @@ class gSpan(object):
         self.timestamps = dict()
         self.output_path = Path(output_path)
         self.output_path.write_text("")
+        Path(str(self.output_path) + ".projections").write_text("")
         if self._max_num_vertices < self._min_num_vertices:
             print('Max number of vertices can not be smaller than '
                   'min number of that.\n'
@@ -322,15 +323,23 @@ class gSpan(object):
             self._DFScode.pop()
 
     def _get_support(self, projected):
-        unique_node_mappings = [set() for i in range(len(self._get_edges_from_projection(projected[0])) + 1)]
+        node_mappings = []
         for pdfs in projected:
             edges = self._get_edges_from_projection(pdfs)
-            for i, edge in enumerate(edges):
-                unique_node_mappings[i].add(edge.frm)
-                if i == len(edges) - 1:
-                    unique_node_mappings[i + 1].add(edge.to)
+            node_mapping = []
+            g = nx.Graph()            
+            for edge in edges:
+                g.add_edge(edge.frm, edge.to)
+                # if int(edge.frm) > int(edge.to):
+                #     edge = Edge(eid=edge.eid, frm=edge.to, to=edge.frm, elb=edge.elb)
+                # assert int(edge.frm) < int(edge.to)
+                # if edge.frm not in node_mapping:
+                #     node_mapping.append(edge.frm)
+                # if edge.to not in node_mapping:
+                #     node_mapping.append(edge.frm)
+            node_mappings.append(list(g.nodes))
             
-        return min(map(len, unique_node_mappings))
+        return min(map(lambda e: len(set(e)), zip(*node_mappings)))
 
     def _get_edges_from_projection(self, pdfs: PDFS):
         edges = [pdfs.edge]
@@ -354,6 +363,12 @@ class gSpan(object):
         display_str = g.display(self._support)
         with open(self.output_path, "a") as ofile:
             ofile.write(display_str)
+        with open(str(self.output_path) + ".projections", "a") as ofile:
+            ofile.write(f"t # {g.gid}\n")
+            for i, p in enumerate(projected):
+                ofile.write(f"p # {i}\n")
+                for e in self._get_edges_from_projection(p):
+                    ofile.write(f"e {e.frm} {e.to} {e.elb}\n")
         print('\nSupport: {}'.format(self._support))
 
         # Add some report info to pandas dataframe "self._report_df".

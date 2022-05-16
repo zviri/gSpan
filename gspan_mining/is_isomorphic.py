@@ -11,9 +11,9 @@ def load_graphs(path):
             if line == "":
                 break
             if line.startswith("t"):
-                _, _, _, support = line.strip().split(" ")
                 if g is not None:
                     graphs.append((g, support))
+                _, _, _, support = line.strip().split(" ")
                 g = nx.Graph()
             elif line.startswith("v"):
                 _, node_id, node_label = line.strip().split(" ")
@@ -27,11 +27,11 @@ def load_graphs(path):
 
 
 def print_graph(graph, support, num):
-    print(f"t {num}")
+    print(f"t {num} {support}")
     for node in graph.nodes:
-        print(f"v {node} {graph.nodes[node]['label']} {support}")
+        print(f"v {node} {graph.nodes[node]['label']}")        
     for edge in graph.edges:
-        print(f"e {edge[0]} {edge[1]} {graph.edges[edge]['label']}")
+        print(f"e {edge[0]} {edge[1]} {graph.edges[edge]['label']}")        
 
 
 def node_match(n1, n2):
@@ -66,7 +66,9 @@ if __name__ == "__main__":
     print(f"Expected graphs that were not found ({len(expected_graphs)})")
     for i, (expected_g, expected_support) in enumerate(expected_graphs, start=1):
         print_graph(expected_g, expected_support, i)
+        print("============")
     print(f"Found graphs that were not expected ({len(found_graphs)})")
     for i, (found_g, found_support) in enumerate(found_graphs, start=1):
         print_graph(found_g, found_support, i)
+        print("============")
 
