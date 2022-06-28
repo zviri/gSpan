@@ -561,6 +561,7 @@ class gSpan(object):
 
         forward_root = collections.defaultdict(Projected)
         backward_root = collections.defaultdict(Projected)
+        visited_edges = set()
         for p in projected:
             delta = p.delta
             g = self.graphs[p.gid]
@@ -583,9 +584,11 @@ class gSpan(object):
                                                  min_vlb,
                                                  history)
             for e in edges:
-                forward_root[
-                    (maxtoc, e.elb - delta, g.vertices[e.to].vlb)
-                ].append(PDFS(g.gid, e, p, delta))
+                if e not in visited_edges and e.elb >= p.edge.elb:
+                    forward_root[
+                        (maxtoc, e.elb - delta, g.vertices[e.to].vlb)
+                    ].append(PDFS(g.gid, e, p, delta))
+                    visited_edges.add(e)
             # rmpath forward
             for rmpath_i in rmpath:
                 edges = self._get_forward_rmpath_edges(g,
@@ -593,10 +596,12 @@ class gSpan(object):
                                                        min_vlb,
                                                        history)
                 for e in edges:
-                    forward_root[
-                        (self._DFScode[rmpath_i].frm,
-                         e.elb - delta, g.vertices[e.to].vlb)
-                    ].append(PDFS(g.gid, e, p, delta))
+                    if e not in visited_edges and e.elb >= p.edge.elb:
+                        forward_root[
+                            (self._DFScode[rmpath_i].frm,
+                            e.elb - delta, g.vertices[e.to].vlb)
+                        ].append(PDFS(g.gid, e, p, delta))
+                        visited_edges.add(e)
 
         # backward
         for to, elb in backward_root:
