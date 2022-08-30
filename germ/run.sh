@@ -1,0 +1,1 @@
+docker run -it --rm -v /Users/peterzvirinsky/src/git/gSpan/graphdata/:/data germ /var/germ/germlab 2 /data/graph_min.data  2
