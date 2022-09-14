@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+import warnings
+warnings.filterwarnings('ignore')
 import codecs
 import collections
 import copy
@@ -191,6 +192,7 @@ class gSpan(object):
                  max_num_edges=float('inf'),
                  max_ngraphs=float('inf'),
                  is_undirected=True,
+                 node_label_support=False,
                  verbose=False,
                  visualize=False,
                  where=False,
@@ -200,6 +202,7 @@ class gSpan(object):
         self.graphs = dict()
         self._max_ngraphs = max_ngraphs
         self._is_undirected = is_undirected
+        self._node_label_support = node_label_support
         self._min_support = min_support
         self._min_num_vertices = min_num_vertices
         self._max_num_vertices = max_num_vertices
@@ -323,20 +326,24 @@ class gSpan(object):
             self._DFScode.pop()
 
     def _get_support(self, projected):
+        if self._node_label_support:
+            graph = self.graphs[0]
+            unique_debtors = set()
+            for pdfs in projected:
+                for edge in self._get_edges_from_projection(pdfs):
+                    if graph.vertices[edge.frm].vlb == self._node_label_support:
+                        unique_debtors.add(edge.frm)
+                    if graph.vertices[edge.to].vlb == self._node_label_support:
+                        unique_debtors.add(edge.to)
+
+            return len(unique_debtors)
+
         node_mappings = []
         for pdfs in projected:
             edges = self._get_edges_from_projection(pdfs)
-            node_mapping = []
             g = nx.Graph()            
             for edge in edges:
                 g.add_edge(edge.frm, edge.to)
-                # if int(edge.frm) > int(edge.to):
-                #     edge = Edge(eid=edge.eid, frm=edge.to, to=edge.frm, elb=edge.elb)
-                # assert int(edge.frm) < int(edge.to)
-                # if edge.frm not in node_mapping:
-                #     node_mapping.append(edge.frm)
-                # if edge.to not in node_mapping:
-                #     node_mapping.append(edge.frm)
             node_mappings.append(list(g.nodes))
             
         return min(map(lambda e: len(set(e)), zip(*node_mappings)))

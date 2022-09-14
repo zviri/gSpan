@@ -29,6 +29,7 @@ def main(FLAGS=None):
         max_num_edges=FLAGS.upper_bound_of_num_edges,
         max_ngraphs=FLAGS.num_graphs,
         is_undirected=(not FLAGS.directed),
+        node_label_support=FLAGS.node_label_support,
         verbose=FLAGS.verbose,
         visualize=FLAGS.plot,
         where=FLAGS.where,

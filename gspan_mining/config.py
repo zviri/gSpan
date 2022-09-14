@@ -46,6 +46,11 @@ parser.add_argument(
          'default inf'
 )
 parser.add_argument(
+    '--node_label_support',
+    type=str,
+    help='which label use to calcuate unique support'
+)
+parser.add_argument(
     '-d', '--directed',
     type=str2bool,
     default=False,
