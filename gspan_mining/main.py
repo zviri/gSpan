@@ -7,8 +7,8 @@ from __future__ import print_function
 import os
 import sys
 
-from .config import parser
-from .gspan import gSpan
+from gspan_mining.config import parser
+from gspan_mining.gspan import gSpan
 
 
 def main(FLAGS=None):
@@ -29,7 +29,7 @@ def main(FLAGS=None):
         max_num_edges=FLAGS.upper_bound_of_num_edges,
         max_ngraphs=FLAGS.num_graphs,
         is_undirected=(not FLAGS.directed),
-        node_label_support=FLAGS.node_label_support,
+        debtor_support=FLAGS.debtor_support,
         verbose=FLAGS.verbose,
         visualize=FLAGS.plot,
         where=FLAGS.where,

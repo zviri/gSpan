@@ -10,10 +10,10 @@ import copy
 import itertools
 import time
 
-from .graph import AUTO_EDGE_ID, Edge
-from .graph import Graph
-from .graph import VACANT_GRAPH_ID
-from .graph import VACANT_VERTEX_LABEL
+from gspan_mining.graph import AUTO_EDGE_ID, Edge
+from gspan_mining.graph import Graph
+from gspan_mining.graph import VACANT_GRAPH_ID
+from gspan_mining.graph import VACANT_VERTEX_LABEL
 from pathlib import Path
 import pandas as pd
 import networkx as nx
@@ -192,7 +192,7 @@ class gSpan(object):
                  max_num_edges=float('inf'),
                  max_ngraphs=float('inf'),
                  is_undirected=True,
-                 node_label_support=False,
+                 debtor_support=False,
                  verbose=False,
                  visualize=False,
                  where=False,
@@ -202,7 +202,7 @@ class gSpan(object):
         self.graphs = dict()
         self._max_ngraphs = max_ngraphs
         self._is_undirected = is_undirected
-        self._node_label_support = node_label_support
+        self._debtor_support = debtor_support
         self._min_support = min_support
         self._min_num_vertices = min_num_vertices
         self._max_num_vertices = max_num_vertices
@@ -326,15 +326,11 @@ class gSpan(object):
             self._DFScode.pop()
 
     def _get_support(self, projected):
-        if self._node_label_support:
-            graph = self.graphs[0]
+        if self._debtor_support:
             unique_debtors = set()
             for pdfs in projected:
                 for edge in self._get_edges_from_projection(pdfs):
-                    if graph.vertices[edge.frm].vlb == self._node_label_support:
-                        unique_debtors.add(edge.frm)
-                    if graph.vertices[edge.to].vlb == self._node_label_support:
-                        unique_debtors.add(edge.to)
+                    unique_debtors.add(edge.frm) # all nodes with out edges are debtors
 
             return len(unique_debtors)
 
