@@ -119,12 +119,12 @@ class Graph(object):
             for to in edges:
                 if self.is_undirected:
                     if frm < to:
-                        print('e {} {} {}'.format(frm, to, edges[to].elb))
-                        display_str += 'e {} {} {}\n'.format(
-                            frm, to, edges[to].elb)
+                        print('e {} {} {} {}'.format(frm, to, edges[to].elb[0], edges[to].elb[1]))
+                        display_str += 'e {} {} {} {}\n'.format(
+                            frm, to, edges[to].elb[0], edges[to].elb[1])
                 else:
-                    print('e {} {} {}'.format(frm, to, edges[to].elb))
-                    display_str += 'e {} {} {}\n'.format(frm, to, edges[to].elb)
+                    print('e {} {} {} {}'.format(frm, to, edges[to].elb[0], edges[to].elb[1]))
+                    display_str += 'e {} {} {} {}\n'.format(frm, to, edges[to].elb[0], edges[to].elb[1])
         return display_str
 
     def plot(self):

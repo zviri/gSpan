@@ -266,7 +266,7 @@ class gSpan(object):
                 elif cols[0] == 'v':
                     tgraph.add_vertex(cols[1], cols[2])
                 elif cols[0] == 'e':
-                    tgraph.add_edge(AUTO_EDGE_ID, cols[1], cols[2], int(cols[3]))
+                    tgraph.add_edge(AUTO_EDGE_ID, cols[1], cols[2], (int(cols[3]), cols[4]))
             # adapt to input files that do not end with 't # -1'
             if tgraph is not None:
                 self.graphs[graph_cnt] = tgraph
@@ -316,8 +316,8 @@ class gSpan(object):
             for vid, v in g.vertices.items():
                 edges = self._get_forward_root_edges(g, vid)
                 for e in edges:
-                    root[(v.vlb, 0, g.vertices[e.to].vlb)].append(
-                        PDFS(gid, e, None, e.elb)
+                    root[(v.vlb, (0, e.elb[1]), g.vertices[e.to].vlb)].append(
+                        PDFS(gid, e, None, e.elb[0])
                     )
 
         for vevlb, projected in root.items():
@@ -371,7 +371,7 @@ class gSpan(object):
             for i, p in enumerate(projected):
                 ofile.write(f"p # {i}\n")
                 for e in self._get_edges_from_projection(p):
-                    ofile.write(f"e {e.frm} {e.to} {e.elb}\n")
+                    ofile.write(f"e {e.frm} {e.to} {e.elb[0]} {e.elb[1]}\n")
         print('\nSupport: {}'.format(self._support))
 
         # Add some report info to pandas dataframe "self._report_df".
@@ -576,7 +576,7 @@ class gSpan(object):
                                             history)
                 if e is not None:
                     backward_root[
-                        (self._DFScode[rmpath_i].frm, e.elb - delta)
+                        (self._DFScode[rmpath_i].frm, (e.elb[0] - delta, e.elb[1]))
                     ].append(PDFS(g.gid, e, p, delta))
             # pure forward
             if num_vertices >= self._max_num_vertices:
@@ -587,7 +587,7 @@ class gSpan(object):
                                                  history)
             for e in edges:
                 forward_root[
-                    (maxtoc, e.elb - delta, g.vertices[e.to].vlb)
+                    (maxtoc, (e.elb[0] - delta, e.elb[1]), g.vertices[e.to].vlb)
                 ].append(PDFS(g.gid, e, p, delta))
 
             # rmpath forward
@@ -599,7 +599,7 @@ class gSpan(object):
                 for e in edges:
                     forward_root[
                         (self._DFScode[rmpath_i].frm,
-                        e.elb - delta, g.vertices[e.to].vlb)
+                        (e.elb[0] - delta, e.elb[1]), g.vertices[e.to].vlb)
                     ].append(PDFS(g.gid, e, p, delta))
 
         # backward

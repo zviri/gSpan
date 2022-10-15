@@ -19,8 +19,8 @@ def load_graphs(path):
                 _, node_id, node_label = line.strip().split(" ")
                 g.add_node(node_id, label=node_label)
             elif line.startswith("e"):
-                _, from_id, to_id, label = line.strip().split(" ")
-                g.add_edge(from_id, to_id, label=label)
+                _, from_id, to_id, time_label = line.strip().split(" ")[:4]
+                g.add_edge(from_id, to_id, label=time_label)
         if g is not None:
             graphs.append((g, support))
     return graphs
