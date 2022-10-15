@@ -37,3 +37,4 @@ requirement.txt
 build/*
 dist/*
 gspan_mining.egg-info/*
+.vscode
