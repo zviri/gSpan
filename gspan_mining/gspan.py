@@ -366,12 +366,18 @@ class gSpan(object):
         display_str = g.display(self._support)
         with open(self.output_path, "a") as ofile:
             ofile.write(display_str)
-        with open(str(self.output_path) + ".projections", "a") as ofile:
+        with open(str(self.output_path) + ".projections", "a") as ofile, open(str(self.output_path) + ".debtors", "a") as ofile2:
             ofile.write(f"t # {g.gid}\n")
+            ofile2.write(f"t # {g.gid}\n")
+            unique_debtors = set()
             for i, p in enumerate(projected):
                 ofile.write(f"p # {i}\n")
                 for e in self._get_edges_from_projection(p):
                     ofile.write(f"e {e.frm} {e.to} {e.elb[0]} {e.elb[1]}\n")
+                    if e.frm not in unique_debtors:
+                        ofile2.write(f"{e.frm}\n")
+                        unique_debtors.add(e.frm)        
+                    
         print('\nSupport: {}'.format(self._support))
 
         # Add some report info to pandas dataframe "self._report_df".
